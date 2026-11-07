@@ -1,0 +1,1 @@
+CREATE INDEX `transactions_security` ON `transactions` (`security_id`);

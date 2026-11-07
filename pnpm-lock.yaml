@@ -47,6 +47,9 @@ importers:
       '@portfolio/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@portfolio/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       hono:
         specifier: 4.13.17
         version: 4.13.17
@@ -106,6 +109,12 @@ importers:
 
   packages/database:
     dependencies:
+      '@portfolio/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@portfolio/domain':
+        specifier: workspace:*
+        version: link:../domain
       drizzle-orm:
         specifier: 0.45.4
         version: 0.45.4(@cloudflare/workers-types@5.20261107.1)

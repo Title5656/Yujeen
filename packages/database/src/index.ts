@@ -1,2 +1,11 @@
 export { createDatabase } from './client.js';
-export { schemaVersions } from './schema.js';
+export {
+  accounts,
+  auditEvents,
+  importBatches,
+  schemaVersions,
+  securities,
+  tradeSources,
+  transactions,
+} from './schema.js';
+export { createD1TransactionRepository } from './transaction-repository.js';

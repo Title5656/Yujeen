@@ -1,7 +1,12 @@
 import { env, exports } from 'cloudflare:workers';
-import { describe, expect, it } from 'vitest';
+import { applyD1Migrations, reset } from 'cloudflare:test';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { createDatabase, schemaVersions } from '@portfolio/database';
-import migration from '../../../packages/database/migrations/0000_m0_foundation.sql?raw';
+
+beforeEach(async () => {
+  await reset();
+  await applyD1Migrations(env.DB, env.TEST_MIGRATIONS);
+});
 
 describe('local Workers runtime', () => {
   it('runs health through the actual Worker entry point', async () => {
@@ -11,7 +16,6 @@ describe('local Workers runtime', () => {
   });
 
   it('applies the foundation SQL and accesses D1 through Drizzle', async () => {
-    await env.DB.prepare(migration).run();
     const database = createDatabase(env.DB);
     await database.insert(schemaVersions).values({ version: 0, label: 'M0 foundation' });
     expect(await database.select().from(schemaVersions)).toEqual([

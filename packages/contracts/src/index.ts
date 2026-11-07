@@ -5,3 +5,5 @@ export { MarketQuoteSchema } from './market-quote.js';
 export type { MarketQuote } from './market-quote.js';
 export { MockImportDocumentSchema } from './mock-import.js';
 export type { MockImportDocument } from './mock-import.js';
+export { TradeSchema, ImportBatchSchema, ConfirmedTradeBatchSchema } from './trade.js';
+export type { Trade, ImportBatch, ConfirmedTradeBatch } from './trade.js';
