@@ -1,0 +1,24 @@
+{
+  "dependencies": {
+    "drizzle-orm": "0.45.4"
+  },
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.config.json --noEmit",
+    "build": "tsc -p tsconfig.build.json",
+    "db:generate": "drizzle-kit generate"
+  },
+  "private": true,
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "devDependencies": {
+    "drizzle-kit": "0.31.11",
+    "@cloudflare/workers-types": "5.20261107.1"
+  },
+  "name": "@portfolio/database",
+  "version": "0.0.0"
+}

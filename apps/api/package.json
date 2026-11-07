@@ -1,0 +1,25 @@
+{
+  "name": "@portfolio/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --local --ip 127.0.0.1 --port 8787",
+    "preview": "wrangler dev dist/index.js --no-bundle --local --ip 127.0.0.1 --port 8787",
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.config.json --noEmit && tsc -p test/tsconfig.json --noEmit",
+    "test:workers": "vitest run --config vitest.worker.config.ts",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local"
+  },
+  "dependencies": {
+    "@portfolio/contracts": "workspace:*",
+    "hono": "4.13.17"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "1.6.0",
+    "@cloudflare/workers-types": "5.20261107.1",
+    "@portfolio/database": "workspace:*",
+    "vitest": "5.1.0",
+    "wrangler": "4.158.0"
+  }
+}

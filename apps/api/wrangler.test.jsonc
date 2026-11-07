@@ -1,0 +1,13 @@
+{
+  "name": "portfolio-m0-test",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-07",
+  "send_metrics": false,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "portfolio-m0-test",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+    },
+  ],
+}

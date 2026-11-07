@@ -1,0 +1,38 @@
+{
+  "name": "portfolio-tracker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=24.15.0 <25",
+    "pnpm": "11.25.0"
+  },
+  "scripts": {
+    "build:packages": "pnpm --filter \"./packages/*\" --fail-if-no-match -r build",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm build:packages && tsc -p tsconfig.tools.json --noEmit && pnpm -r typecheck",
+    "test": "pnpm build:packages && vitest run && pnpm --filter @portfolio/api test:workers",
+    "test:unit": "pnpm build:packages && vitest run",
+    "build": "pnpm build:packages && pnpm --filter @portfolio/web build && pnpm --filter @portfolio/api build",
+    "dev": "pnpm build && concurrently --kill-others --names web,api \"pnpm --filter @portfolio/web dev\" \"pnpm --filter @portfolio/api dev\"",
+    "preview": "pnpm build && pnpm --filter @portfolio/api preview",
+    "db:migrate:local": "pnpm --filter @portfolio/api db:migrate:local",
+    "test:smoke": "playwright test"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.65.0",
+    "@types/node": "24.19.2",
+    "concurrently": "10.0.6",
+    "eslint": "10.14.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-react-refresh": "0.5.7",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.1",
+    "vitest": "5.1.0"
+  }
+}
