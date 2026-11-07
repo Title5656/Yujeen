@@ -10,11 +10,15 @@ export function App() {
         ข้ามไปเนื้อหาหลัก
       </a>
       <aside className="sidebar">
-        <a href="/" className="brand" aria-label="Portfolio Tracker หน้าหลัก">
-          <img src="/favicon.svg" alt="" width="38" height="38" />
-          <span>
-            Portfolio<span className="brand-caption">พื้นที่การลงทุนส่วนตัว</span>
-          </span>
+        <a href="/" className="brand" aria-label="Yujeen หน้าหลัก">
+          <img
+            className="brand-logo"
+            src="/yujeen-logo.png"
+            alt="Yujeen"
+            width="1536"
+            height="1024"
+          />
+          <span className="brand-caption">พื้นที่การลงทุนส่วนตัว</span>
         </a>
         <p className="nav-caption">WORKSPACE</p>
         <nav aria-label="เมนูหลัก">
