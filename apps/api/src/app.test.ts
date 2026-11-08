@@ -3,6 +3,22 @@ import { ApiErrorSchema, HealthResponseSchema } from '@portfolio/contracts';
 import { createApp } from './app.js';
 
 describe('public foundation API', () => {
+  it.each([
+    '/api/imports',
+    '/api/imports/preview',
+    '/api/imports/confirm',
+    '/api/transactions',
+    '/api/ledger',
+  ])(
+    'does not expose private GET/POST import or ledger data at %s without authentication',
+    async (path) => {
+      for (const method of ['GET', 'POST']) {
+        const response = await createApp().request(path, { method });
+        expect(response.status).toBe(404);
+        expect(ApiErrorSchema.parse(await response.json()).error.code).toBe('NOT_FOUND');
+      }
+    },
+  );
   it('serves the exact minimal health contract', async () => {
     const response = await createApp().request('/api/health');
     expect(response.status).toBe(200);

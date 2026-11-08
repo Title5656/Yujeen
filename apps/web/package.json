@@ -9,6 +9,8 @@
     "typecheck": "tsc --noEmit && tsc -p tsconfig.config.json --noEmit"
   },
   "dependencies": {
+    "@portfolio/importers": "workspace:*",
+    "pdfjs-dist": "6.5.438",
     "@portfolio/contracts": "workspace:*",
     "react": "19.3.1",
     "react-dom": "19.3.1"

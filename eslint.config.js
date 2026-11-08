@@ -63,12 +63,7 @@ export default tseslint.config(
       'no-restricted-imports': [
         'error',
         {
-          patterns: [
-            '@portfolio/domain',
-            '@portfolio/database',
-            '@portfolio/market-data',
-            '@portfolio/importers',
-          ],
+          patterns: ['@portfolio/domain', '@portfolio/database', '@portfolio/market-data'],
         },
       ],
     },

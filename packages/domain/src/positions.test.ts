@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { rebuildPositions } from './positions.js';
-import type { Trade } from './trade.js';
+import type { ExecutionTrade } from './trade.js';
 
 // Synthetic confirmed trades; expected amounts below are hand-derived.
-function trade(id: string, patch: Partial<Trade> = {}): Trade {
+function trade(id: string, patch: Partial<ExecutionTrade> = {}): ExecutionTrade {
   return {
     id,
     accountId: 'mock-account',

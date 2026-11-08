@@ -1,0 +1,115 @@
+.import-page {
+  padding: 28px;
+  max-width: 960px;
+  overflow-wrap: anywhere;
+}
+.import-page > p,
+.import-review p {
+  line-height: 1.8;
+}
+.import-page form {
+  display: grid;
+  gap: 10px;
+  margin: 24px 0;
+  max-width: 100%;
+}
+.import-page input {
+  max-width: 100%;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #c4d0c9;
+  border-radius: 8px;
+  background: #fff;
+  color: #172e25;
+}
+.import-page label {
+  font-weight: 600;
+}
+.import-page small {
+  line-height: 1.7;
+}
+.import-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+.import-page button {
+  padding: 10px 14px;
+  border: 1px solid #365c49;
+  border-radius: 8px;
+  background: #eff5ed;
+  color: #183d29;
+  cursor: pointer;
+}
+.import-page button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.import-page :focus-visible {
+  outline: 3px solid #629357;
+  outline-offset: 3px;
+}
+.import-page [role='alert'],
+.import-review {
+  padding: 18px;
+  border: 1px solid #d8ba72;
+  border-radius: 10px;
+  background: #fffaf0;
+}
+.import-review {
+  margin-top: 24px;
+}
+.import-review h2 {
+  margin-top: 0;
+}
+.import-review li {
+  margin: 8px 0;
+  line-height: 1.7;
+}
+.import-metadata div {
+  margin: 16px 0;
+}
+.import-metadata dt {
+  font-weight: 600;
+}
+.import-metadata dd {
+  margin: 6px 0 0;
+  font-size: 12px;
+}
+.import-page summary {
+  cursor: pointer;
+  font-weight: 600;
+  line-height: 1.8;
+}
+.import-source-line {
+  font-family: monospace;
+  white-space: pre-wrap;
+}
+.import-table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  margin: 18px 0;
+}
+.import-table-scroll table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 950px;
+  background: #fff;
+  font-size: 13px;
+}
+.import-table-scroll th,
+.import-table-scroll td {
+  padding: 12px;
+  border-bottom: 1px solid #d7dfd6;
+  text-align: left;
+}
+.import-table-scroll th {
+  font-weight: 600;
+  background: #edf3eb;
+}
+@media (max-width: 600px) {
+  .import-page {
+    padding: 18px;
+  }
+}

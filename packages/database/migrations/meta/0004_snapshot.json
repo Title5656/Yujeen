@@ -1,0 +1,964 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "8f39ff30-621b-46c0-9dcc-884c7b4fac0e",
+  "prevId": "1bcaf0c2-d46f-46b9-8b65-eec8ce2b94aa",
+  "tables": {
+    "accounts": {
+      "name": "accounts",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "broker": {
+          "name": "broker",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "market": {
+          "name": "market",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "ledger_revision": {
+          "name": "ledger_revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {
+        "accounts_identity": {
+          "name": "accounts_identity",
+          "columns": ["id", "broker", "market", "currency"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "accounts_broker": {
+          "name": "accounts_broker",
+          "value": "\"accounts\".\"broker\" = 'DIME'"
+        },
+        "accounts_market_currency": {
+          "name": "accounts_market_currency",
+          "value": "(\"accounts\".\"market\" = 'US' AND \"accounts\".\"currency\" = 'USD') OR (\"accounts\".\"market\" = 'TH' AND \"accounts\".\"currency\" = 'THB')"
+        },
+        "accounts_revision": {
+          "name": "accounts_revision",
+          "value": "typeof(\"accounts\".\"ledger_revision\") = 'integer' AND \"accounts\".\"ledger_revision\" >= 0"
+        }
+      }
+    },
+    "audit_events": {
+      "name": "audit_events",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "import_batch_id": {
+          "name": "import_batch_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "event_type": {
+          "name": "event_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "recorded_at": {
+          "name": "recorded_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "inserted_count": {
+          "name": "inserted_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "audit_events_import": {
+          "name": "audit_events_import",
+          "columns": ["import_batch_id"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "audit_events_import_batch_id_account_id_import_batches_id_account_id_fk": {
+          "name": "audit_events_import_batch_id_account_id_import_batches_id_account_id_fk",
+          "tableFrom": "audit_events",
+          "tableTo": "import_batches",
+          "columnsFrom": ["import_batch_id", "account_id"],
+          "columnsTo": ["id", "account_id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "audit_events_type": {
+          "name": "audit_events_type",
+          "value": "\"audit_events\".\"event_type\" = 'CONFIRMED_IMPORT'"
+        },
+        "audit_events_count": {
+          "name": "audit_events_count",
+          "value": "typeof(\"audit_events\".\"inserted_count\") = 'integer' AND \"audit_events\".\"inserted_count\" >= 0"
+        }
+      }
+    },
+    "document_order_sources": {
+      "name": "document_order_sources",
+      "columns": {
+        "source_trade_id": {
+          "name": "source_trade_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "external_ref": {
+          "name": "external_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "import_batch_id": {
+          "name": "import_batch_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_row": {
+          "name": "source_row",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fingerprint": {
+          "name": "fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "transaction_id": {
+          "name": "transaction_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "document_order_sources_trade_id": {
+          "name": "document_order_sources_trade_id",
+          "columns": ["source_trade_id"],
+          "isUnique": false
+        },
+        "document_order_sources_account_reference": {
+          "name": "document_order_sources_account_reference",
+          "columns": ["account_id", "external_ref"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "document_order_sources_import_batch_id_account_id_import_batches_id_account_id_fk": {
+          "name": "document_order_sources_import_batch_id_account_id_import_batches_id_account_id_fk",
+          "tableFrom": "document_order_sources",
+          "tableTo": "import_batches",
+          "columnsFrom": ["import_batch_id", "account_id"],
+          "columnsTo": ["id", "account_id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "document_order_sources_transaction_id_account_id_fingerprint_document_orders_id_account_id_fingerprint_fk": {
+          "name": "document_order_sources_transaction_id_account_id_fingerprint_document_orders_id_account_id_fingerprint_fk",
+          "tableFrom": "document_order_sources",
+          "tableTo": "document_orders",
+          "columnsFrom": ["transaction_id", "account_id", "fingerprint"],
+          "columnsTo": ["id", "account_id", "fingerprint"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "document_order_sources_import_batch_id_source_row_pk": {
+          "columns": ["import_batch_id", "source_row"],
+          "name": "document_order_sources_import_batch_id_source_row_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "document_order_sources_row": {
+          "name": "document_order_sources_row",
+          "value": "typeof(\"document_order_sources\".\"source_row\") = 'integer' AND \"document_order_sources\".\"source_row\" >= 1"
+        }
+      }
+    },
+    "document_orders": {
+      "name": "document_orders",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "security_id": {
+          "name": "security_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "broker": {
+          "name": "broker",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "market": {
+          "name": "market",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "precision": {
+          "name": "precision",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "side": {
+          "name": "side",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "trade_date": {
+          "name": "trade_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "unit_price": {
+          "name": "unit_price",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "gross_amount": {
+          "name": "gross_amount",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "net_amount": {
+          "name": "net_amount",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fee": {
+          "name": "fee",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tax": {
+          "name": "tax",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fee_currency": {
+          "name": "fee_currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "external_ref": {
+          "name": "external_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "import_batch_id": {
+          "name": "import_batch_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_row": {
+          "name": "source_row",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fingerprint": {
+          "name": "fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "document_orders_account_reference": {
+          "name": "document_orders_account_reference",
+          "columns": ["account_id", "external_ref"],
+          "isUnique": true
+        },
+        "document_orders_account_fingerprint": {
+          "name": "document_orders_account_fingerprint",
+          "columns": ["account_id", "fingerprint"],
+          "isUnique": true
+        },
+        "document_orders_canonical_identity": {
+          "name": "document_orders_canonical_identity",
+          "columns": ["id", "account_id", "fingerprint"],
+          "isUnique": true
+        },
+        "document_orders_batch_row": {
+          "name": "document_orders_batch_row",
+          "columns": ["import_batch_id", "source_row"],
+          "isUnique": true
+        },
+        "document_orders_ledger_order": {
+          "name": "document_orders_ledger_order",
+          "columns": ["account_id", "trade_date", "id"],
+          "isUnique": false
+        },
+        "document_orders_security": {
+          "name": "document_orders_security",
+          "columns": ["security_id"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "document_orders_account_id_broker_market_currency_accounts_id_broker_market_currency_fk": {
+          "name": "document_orders_account_id_broker_market_currency_accounts_id_broker_market_currency_fk",
+          "tableFrom": "document_orders",
+          "tableTo": "accounts",
+          "columnsFrom": ["account_id", "broker", "market", "currency"],
+          "columnsTo": ["id", "broker", "market", "currency"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "document_orders_security_id_market_currency_securities_id_market_currency_fk": {
+          "name": "document_orders_security_id_market_currency_securities_id_market_currency_fk",
+          "tableFrom": "document_orders",
+          "tableTo": "securities",
+          "columnsFrom": ["security_id", "market", "currency"],
+          "columnsTo": ["id", "market", "currency"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "document_orders_import_batch_id_account_id_import_batches_id_account_id_fk": {
+          "name": "document_orders_import_batch_id_account_id_import_batches_id_account_id_fk",
+          "tableFrom": "document_orders",
+          "tableTo": "import_batches",
+          "columnsFrom": ["import_batch_id", "account_id"],
+          "columnsTo": ["id", "account_id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "document_orders_supported_policy": {
+          "name": "document_orders_supported_policy",
+          "value": "\"document_orders\".\"broker\" = 'DIME' AND \"document_orders\".\"market\" = 'US' AND \"document_orders\".\"currency\" = 'USD' AND \"document_orders\".\"fee_currency\" = 'USD' AND \"document_orders\".\"status\" = 'CONFIRMED' AND \"document_orders\".\"precision\" = 'DOCUMENT_DATE'"
+        },
+        "document_orders_side": {
+          "name": "document_orders_side",
+          "value": "\"document_orders\".\"side\" IN ('BUY', 'SELL')"
+        },
+        "document_orders_source_row": {
+          "name": "document_orders_source_row",
+          "value": "typeof(\"document_orders\".\"source_row\") = 'integer' AND \"document_orders\".\"source_row\" >= 1"
+        }
+      }
+    },
+    "import_batches": {
+      "name": "import_batches",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "document_sha256": {
+          "name": "document_sha256",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "parser_version": {
+          "name": "parser_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "confirmed_at": {
+          "name": "confirmed_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "import_batches_account_hash": {
+          "name": "import_batches_account_hash",
+          "columns": ["account_id", "document_sha256"],
+          "isUnique": true
+        },
+        "import_batches_identity": {
+          "name": "import_batches_identity",
+          "columns": ["id", "account_id"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "import_batches_account_id_accounts_id_fk": {
+          "name": "import_batches_account_id_accounts_id_fk",
+          "tableFrom": "import_batches",
+          "tableTo": "accounts",
+          "columnsFrom": ["account_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "schema_versions": {
+      "name": "schema_versions",
+      "columns": {
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "securities": {
+      "name": "securities",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "symbol": {
+          "name": "symbol",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "market": {
+          "name": "market",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "exchange_mic": {
+          "name": "exchange_mic",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "securities_identity": {
+          "name": "securities_identity",
+          "columns": ["id", "market", "currency"],
+          "isUnique": true
+        },
+        "securities_listing": {
+          "name": "securities_listing",
+          "columns": ["market", "symbol", "exchange_mic"],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "securities_market_currency": {
+          "name": "securities_market_currency",
+          "value": "(\"securities\".\"market\" = 'US' AND \"securities\".\"currency\" = 'USD') OR (\"securities\".\"market\" = 'TH' AND \"securities\".\"currency\" = 'THB')"
+        }
+      }
+    },
+    "trade_sources": {
+      "name": "trade_sources",
+      "columns": {
+        "source_trade_id": {
+          "name": "source_trade_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "external_ref": {
+          "name": "external_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "import_batch_id": {
+          "name": "import_batch_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_row": {
+          "name": "source_row",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fingerprint": {
+          "name": "fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "transaction_id": {
+          "name": "transaction_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "trade_sources_trade_id": {
+          "name": "trade_sources_trade_id",
+          "columns": ["source_trade_id"],
+          "isUnique": false
+        },
+        "trade_sources_account_reference": {
+          "name": "trade_sources_account_reference",
+          "columns": ["account_id", "external_ref"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "trade_sources_import_batch_id_account_id_import_batches_id_account_id_fk": {
+          "name": "trade_sources_import_batch_id_account_id_import_batches_id_account_id_fk",
+          "tableFrom": "trade_sources",
+          "tableTo": "import_batches",
+          "columnsFrom": ["import_batch_id", "account_id"],
+          "columnsTo": ["id", "account_id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "trade_sources_transaction_id_account_id_fingerprint_transactions_id_account_id_fingerprint_fk": {
+          "name": "trade_sources_transaction_id_account_id_fingerprint_transactions_id_account_id_fingerprint_fk",
+          "tableFrom": "trade_sources",
+          "tableTo": "transactions",
+          "columnsFrom": ["transaction_id", "account_id", "fingerprint"],
+          "columnsTo": ["id", "account_id", "fingerprint"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "trade_sources_import_batch_id_source_row_pk": {
+          "columns": ["import_batch_id", "source_row"],
+          "name": "trade_sources_import_batch_id_source_row_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "trade_sources_row": {
+          "name": "trade_sources_row",
+          "value": "typeof(\"trade_sources\".\"source_row\") = 'integer' AND \"trade_sources\".\"source_row\" >= 1"
+        }
+      }
+    },
+    "transactions": {
+      "name": "transactions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "security_id": {
+          "name": "security_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "broker": {
+          "name": "broker",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "market": {
+          "name": "market",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "side": {
+          "name": "side",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "executed_at": {
+          "name": "executed_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sequence": {
+          "name": "sequence",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "trade_date": {
+          "name": "trade_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "execution_price": {
+          "name": "execution_price",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fee": {
+          "name": "fee",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tax": {
+          "name": "tax",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fee_currency": {
+          "name": "fee_currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "external_ref": {
+          "name": "external_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "import_batch_id": {
+          "name": "import_batch_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_row": {
+          "name": "source_row",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fingerprint": {
+          "name": "fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "transactions_account_reference": {
+          "name": "transactions_account_reference",
+          "columns": ["account_id", "external_ref"],
+          "isUnique": true
+        },
+        "transactions_account_fingerprint": {
+          "name": "transactions_account_fingerprint",
+          "columns": ["account_id", "fingerprint"],
+          "isUnique": true
+        },
+        "transactions_canonical_identity": {
+          "name": "transactions_canonical_identity",
+          "columns": ["id", "account_id", "fingerprint"],
+          "isUnique": true
+        },
+        "transactions_batch_row": {
+          "name": "transactions_batch_row",
+          "columns": ["import_batch_id", "source_row"],
+          "isUnique": true
+        },
+        "transactions_ledger_order": {
+          "name": "transactions_ledger_order",
+          "columns": ["account_id", "executed_at", "sequence", "id"],
+          "isUnique": false
+        },
+        "transactions_security": {
+          "name": "transactions_security",
+          "columns": ["security_id"],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "transactions_account_id_broker_market_currency_accounts_id_broker_market_currency_fk": {
+          "name": "transactions_account_id_broker_market_currency_accounts_id_broker_market_currency_fk",
+          "tableFrom": "transactions",
+          "tableTo": "accounts",
+          "columnsFrom": ["account_id", "broker", "market", "currency"],
+          "columnsTo": ["id", "broker", "market", "currency"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "transactions_security_id_market_currency_securities_id_market_currency_fk": {
+          "name": "transactions_security_id_market_currency_securities_id_market_currency_fk",
+          "tableFrom": "transactions",
+          "tableTo": "securities",
+          "columnsFrom": ["security_id", "market", "currency"],
+          "columnsTo": ["id", "market", "currency"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "transactions_import_batch_id_account_id_import_batches_id_account_id_fk": {
+          "name": "transactions_import_batch_id_account_id_import_batches_id_account_id_fk",
+          "tableFrom": "transactions",
+          "tableTo": "import_batches",
+          "columnsFrom": ["import_batch_id", "account_id"],
+          "columnsTo": ["id", "account_id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "transactions_supported_policy": {
+          "name": "transactions_supported_policy",
+          "value": "\"transactions\".\"broker\" = 'DIME' AND \"transactions\".\"market\" = 'US' AND \"transactions\".\"currency\" = 'USD' AND \"transactions\".\"fee_currency\" = 'USD' AND \"transactions\".\"status\" = 'FILLED'"
+        },
+        "transactions_side": {
+          "name": "transactions_side",
+          "value": "\"transactions\".\"side\" IN ('BUY', 'SELL')"
+        },
+        "transactions_sequence": {
+          "name": "transactions_sequence",
+          "value": "typeof(\"transactions\".\"sequence\") = 'integer' AND \"transactions\".\"sequence\" >= 0"
+        },
+        "transactions_source_row": {
+          "name": "transactions_source_row",
+          "value": "typeof(\"transactions\".\"source_row\") = 'integer' AND \"transactions\".\"source_row\" >= 1"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

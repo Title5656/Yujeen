@@ -1,17 +1,15 @@
-export interface Trade {
+import { FinancialDecimal as D } from './decimal.js';
+
+interface TradeFields {
   readonly id: string;
   readonly accountId: string;
   readonly securityId: string;
   readonly broker: 'DIME';
   readonly market: 'US';
   readonly currency: 'USD';
-  readonly status: 'FILLED';
   readonly side: 'BUY' | 'SELL';
-  readonly executedAt: string;
-  readonly sequence: number;
   readonly tradeDate: string;
   readonly quantity: string;
-  readonly executionPrice: string;
   readonly fee: string;
   readonly tax: string;
   readonly feeCurrency: 'USD';
@@ -19,6 +17,29 @@ export interface Trade {
   readonly importBatchId: string;
   readonly sourceRow: number;
 }
+
+/** Legacy M1 execution record. Its wire representation and v1 identity are unchanged. */
+export interface ExecutionTrade extends TradeFields {
+  readonly status: 'FILLED';
+  readonly executedAt: string;
+  readonly sequence: number;
+  readonly executionPrice: string;
+}
+
+/** Confirmed order summary; documentary day and rounded unit price are not a fill. */
+export interface DocumentOrderTrade extends TradeFields {
+  readonly precision: 'DOCUMENT_DATE';
+  readonly status: 'CONFIRMED';
+  readonly executedAt: null;
+  readonly sequence: null;
+  readonly executionPrice: null;
+  readonly externalRef: string;
+  readonly unitPrice: string;
+  readonly grossAmount: string;
+  readonly netAmount: string;
+}
+
+export type Trade = ExecutionTrade | DocumentOrderTrade;
 
 export interface ImportBatch {
   readonly id: string;
@@ -83,13 +104,66 @@ export function validateTrade(input: Trade): Trade {
   ) {
     throw new Error('Only DIME US trades and fees denominated in USD are supported');
   }
-  if (input.status !== 'FILLED') throw new Error('Only FILLED trades can enter the ledger');
   if (input.side !== 'BUY' && input.side !== 'SELL') throw new Error('Trade side is invalid');
-  if (!Number.isSafeInteger(input.sequence) || input.sequence < 0) {
-    throw new Error('sequence must be a nonnegative safe integer');
-  }
   if (!Number.isSafeInteger(input.sourceRow) || input.sourceRow < 1) {
     throw new Error('sourceRow must be a positive safe integer');
+  }
+  if (input.status === 'CONFIRMED') {
+    if (
+      input.precision !== 'DOCUMENT_DATE' ||
+      input.executedAt !== null ||
+      input.sequence !== null ||
+      input.executionPrice !== null
+    ) {
+      throw new Error(
+        'A documentary order cannot contain an invented execution time, sequence or price',
+      );
+    }
+    requireIdentifier(input.externalRef, 'externalRef');
+    if (!isDocumentTradeDate(input.tradeDate))
+      throw new Error('tradeDate must be a real documentary calendar day');
+    const quantity = normalizeDecimal(input.quantity, 'quantity', true);
+    const unitPrice = normalizeDecimal(input.unitPrice, 'unitPrice', true);
+    const grossAmount = normalizeDecimal(input.grossAmount, 'grossAmount', true);
+    const netAmount = normalizeDecimal(input.netAmount, 'netAmount');
+    const fee = normalizeDecimal(input.fee, 'fee');
+    const tax = normalizeDecimal(input.tax, 'tax');
+    const expectedNet =
+      input.side === 'BUY'
+        ? new D(grossAmount).plus(fee).plus(tax)
+        : new D(grossAmount).minus(fee).minus(tax);
+    if (!expectedNet.eq(netAmount))
+      throw new Error('Reported net amount does not match gross amount, fee and withholding tax');
+    return {
+      id: input.id,
+      accountId: input.accountId,
+      securityId: input.securityId,
+      broker: input.broker,
+      market: input.market,
+      currency: input.currency,
+      precision: 'DOCUMENT_DATE',
+      status: 'CONFIRMED',
+      side: input.side,
+      executedAt: null,
+      sequence: null,
+      executionPrice: null,
+      tradeDate: input.tradeDate,
+      quantity,
+      unitPrice,
+      grossAmount,
+      netAmount,
+      fee,
+      tax,
+      feeCurrency: input.feeCurrency,
+      externalRef: input.externalRef,
+      importBatchId: input.importBatchId,
+      sourceRow: input.sourceRow,
+    };
+  }
+  if (input.status !== 'FILLED' || ('precision' in input && input.precision !== undefined))
+    throw new Error('Only FILLED executions or CONFIRMED documentary orders can enter the ledger');
+  if (!Number.isSafeInteger(input.sequence) || input.sequence < 0) {
+    throw new Error('sequence must be a nonnegative safe integer');
   }
   const executedAt = normalizeExecutedAt(input.executedAt);
   if (input.tradeDate !== dimeUsTradeDate(executedAt)) {
@@ -116,6 +190,14 @@ export function validateTrade(input: Trade): Trade {
     importBatchId: input.importBatchId,
     sourceRow: input.sourceRow,
   };
+}
+
+export function isDocumentTradeDate(value: unknown): value is string {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year = 0, month = 0, day = 0] = value.split('-').map(Number);
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const maximum = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
+  return year >= 1 && maximum !== undefined && day >= 1 && day <= maximum;
 }
 
 export function normalizeExecutedAt(value: string): string {
@@ -154,6 +236,26 @@ export function dimeUsTradeDate(value: string): string {
 
 export function tradeFingerprint(trade: Trade): string {
   const normalized = validateTrade(trade);
+  if (normalized.status === 'CONFIRMED') {
+    return `trade:v2:${JSON.stringify([
+      normalized.precision,
+      normalized.broker,
+      normalized.market,
+      normalized.accountId,
+      normalized.securityId,
+      normalized.side,
+      normalized.tradeDate,
+      normalized.externalRef,
+      normalized.quantity,
+      normalized.unitPrice,
+      normalized.grossAmount,
+      normalized.netAmount,
+      normalized.fee,
+      normalized.tax,
+      normalized.currency,
+      normalized.feeCurrency,
+    ])}`;
+  }
   return `trade:v1:${JSON.stringify([
     normalized.broker,
     normalized.market,

@@ -168,6 +168,99 @@ export const tradeSources = sqliteTable(
   ],
 );
 
+// Documentary orders are ledger entries with a different evidence precision.
+// Keeping their physical representation additive preserves every legacy fill row
+// and fingerprint while the repository exposes one logical ledger.
+export const documentOrders = sqliteTable(
+  'document_orders',
+  {
+    id: text('id').primaryKey(),
+    accountId: text('account_id').notNull(),
+    securityId: text('security_id').notNull(),
+    broker: text('broker').notNull(),
+    market: text('market').notNull(),
+    currency: text('currency').notNull(),
+    precision: text('precision').notNull(),
+    status: text('status').notNull(),
+    side: text('side').notNull(),
+    tradeDate: text('trade_date').notNull(),
+    quantity: text('quantity').notNull(),
+    unitPrice: text('unit_price').notNull(),
+    grossAmount: text('gross_amount').notNull(),
+    netAmount: text('net_amount').notNull(),
+    fee: text('fee').notNull(),
+    tax: text('tax').notNull(),
+    feeCurrency: text('fee_currency').notNull(),
+    externalRef: text('external_ref').notNull(),
+    importBatchId: text('import_batch_id').notNull(),
+    sourceRow: integer('source_row').notNull(),
+    fingerprint: text('fingerprint').notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.accountId, table.broker, table.market, table.currency],
+      foreignColumns: [accounts.id, accounts.broker, accounts.market, accounts.currency],
+    }),
+    foreignKey({
+      columns: [table.securityId, table.market, table.currency],
+      foreignColumns: [securities.id, securities.market, securities.currency],
+    }),
+    foreignKey({
+      columns: [table.importBatchId, table.accountId],
+      foreignColumns: [importBatches.id, importBatches.accountId],
+    }),
+    uniqueIndex('document_orders_account_reference').on(table.accountId, table.externalRef),
+    uniqueIndex('document_orders_account_fingerprint').on(table.accountId, table.fingerprint),
+    uniqueIndex('document_orders_canonical_identity').on(
+      table.id,
+      table.accountId,
+      table.fingerprint,
+    ),
+    uniqueIndex('document_orders_batch_row').on(table.importBatchId, table.sourceRow),
+    index('document_orders_ledger_order').on(table.accountId, table.tradeDate, table.id),
+    index('document_orders_security').on(table.securityId),
+    check(
+      'document_orders_supported_policy',
+      sql`${table.broker} = 'DIME' AND ${table.market} = 'US' AND ${table.currency} = 'USD' AND ${table.feeCurrency} = 'USD' AND ${table.status} = 'CONFIRMED' AND ${table.precision} = 'DOCUMENT_DATE'`,
+    ),
+    check('document_orders_side', sql`${table.side} IN ('BUY', 'SELL')`),
+    check(
+      'document_orders_source_row',
+      sql`typeof(${table.sourceRow}) = 'integer' AND ${table.sourceRow} >= 1`,
+    ),
+  ],
+);
+
+export const documentOrderSources = sqliteTable(
+  'document_order_sources',
+  {
+    sourceTradeId: text('source_trade_id').notNull(),
+    accountId: text('account_id').notNull(),
+    externalRef: text('external_ref').notNull(),
+    importBatchId: text('import_batch_id').notNull(),
+    sourceRow: integer('source_row').notNull(),
+    fingerprint: text('fingerprint').notNull(),
+    transactionId: text('transaction_id').notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.importBatchId, table.sourceRow] }),
+    foreignKey({
+      columns: [table.importBatchId, table.accountId],
+      foreignColumns: [importBatches.id, importBatches.accountId],
+    }),
+    foreignKey({
+      columns: [table.transactionId, table.accountId, table.fingerprint],
+      foreignColumns: [documentOrders.id, documentOrders.accountId, documentOrders.fingerprint],
+    }),
+    index('document_order_sources_trade_id').on(table.sourceTradeId),
+    index('document_order_sources_account_reference').on(table.accountId, table.externalRef),
+    check(
+      'document_order_sources_row',
+      sql`typeof(${table.sourceRow}) = 'integer' AND ${table.sourceRow} >= 1`,
+    ),
+  ],
+);
+
 export const auditEvents = sqliteTable(
   'audit_events',
   {

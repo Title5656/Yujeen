@@ -12,6 +12,7 @@
     "db:migrate:local": "wrangler d1 migrations apply DB --local"
   },
   "dependencies": {
+    "@portfolio/importers": "workspace:*",
     "@portfolio/contracts": "workspace:*",
     "@portfolio/domain": "workspace:*",
     "hono": "4.13.17"

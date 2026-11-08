@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   LedgerRevisionConflictError,
+  LedgerConflictError,
   tradeFingerprint,
   type ImportBatch,
+  type DocumentOrderTrade,
   type LedgerSnapshot,
   type Trade,
   type TransactionRepository,
@@ -36,6 +38,20 @@ const trade: Trade = {
   externalRef: null,
   importBatchId: 'MOCK-batch',
   sourceRow: 1,
+};
+const documentOrder: DocumentOrderTrade = {
+  ...trade,
+  id: 'MOCK-document-order',
+  precision: 'DOCUMENT_DATE',
+  status: 'CONFIRMED',
+  executedAt: null,
+  sequence: null,
+  executionPrice: null,
+  unitPrice: '10',
+  grossAmount: '10',
+  netAmount: '10',
+  externalRef: 'MOCK-order-reference',
+  sourceRow: 2,
 };
 
 // This port double models another writer advancing an otherwise unchanged ledger.
@@ -87,6 +103,59 @@ class ContendedRepository implements TransactionRepository {
 }
 
 describe('confirmed import contention', () => {
+  it.each([
+    [trade, documentOrder],
+    [documentOrder, trade],
+    [trade, { ...documentOrder, tradeDate: '2026-11-07' }],
+  ] as const)(
+    'blocks unlinked execution/order evidence for the same security without writing (%#)',
+    async (existing, incoming) => {
+      const repository = new ContendedRepository(0);
+      repository.snapshot = { revision: 1, trades: [existing], batches: [], aliases: [] };
+      await expect(
+        recordConfirmedTrades(repository, { batch, trades: [incoming] }),
+      ).rejects.toBeInstanceOf(LedgerConflictError);
+      expect(repository.snapshot).toEqual({
+        revision: 1,
+        trades: [existing],
+        batches: [],
+        aliases: [],
+      });
+      expect(repository.writes).toBe(0);
+    },
+  );
+
+  it('blocks mixed evidence in the first batch without writing either row', async () => {
+    const repository = new ContendedRepository(0);
+    await expect(
+      recordConfirmedTrades(repository, { batch, trades: [trade, documentOrder] }),
+    ).rejects.toBeInstanceOf(LedgerConflictError);
+    expect(repository.snapshot).toEqual({ revision: 0, trades: [], batches: [], aliases: [] });
+    expect(repository.writes).toBe(0);
+  });
+
+  it('allows documentary orders for a different security from existing execution evidence', async () => {
+    const repository = new ContendedRepository(0);
+    repository.snapshot = { revision: 1, trades: [trade], batches: [], aliases: [] };
+    await expect(
+      recordConfirmedTrades(repository, {
+        batch,
+        trades: [{ ...documentOrder, securityId: 'MOCK-other-security' }],
+      }),
+    ).resolves.toEqual({ inserted: 1, duplicates: 0 });
+    expect(repository.snapshot.trades).toHaveLength(2);
+  });
+
+  it.each([-1, 0.5, NaN, Infinity])(
+    'rejects an invalid expected review revision %s before writing',
+    async (expectedRevision) => {
+      const repository = new ContendedRepository(0);
+      await expect(
+        recordConfirmedTrades(repository, { batch, trades: [trade] }, expectedRevision),
+      ).rejects.toThrow();
+      expect(repository.snapshot).toEqual({ revision: 0, trades: [], batches: [], aliases: [] });
+    },
+  );
   it('reloads a new snapshot after revision conflicts before persisting on its third attempt', async () => {
     const repository = new ContendedRepository(2);
     expect(await recordConfirmedTrades(repository, { batch, trades: [trade] })).toEqual({

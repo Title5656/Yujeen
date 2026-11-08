@@ -2,6 +2,10 @@
   "private": true,
   "version": "0.0.0",
   "exports": {
+    "./pdf": {
+      "types": "./dist/pdf-extractor.d.ts",
+      "import": "./dist/pdf-extractor.js"
+    },
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
@@ -13,8 +17,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@portfolio/contracts": "workspace:*",
     "@portfolio/domain": "workspace:*",
-    "@portfolio/contracts": "workspace:*"
+    "pdfjs-dist": "6.5.438"
   },
   "name": "@portfolio/importers"
 }

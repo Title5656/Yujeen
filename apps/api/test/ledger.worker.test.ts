@@ -13,7 +13,7 @@ const batch = (id = 'batch-1', hash = sha('a')) => ({
   parserVersion: 'mock-v1',
   confirmedAt: '2026-11-06T18:00:00.000Z',
 });
-const trade = (overrides: Partial<domain.Trade> = {}): domain.Trade => ({
+const trade = (overrides: Partial<domain.ExecutionTrade> = {}): domain.ExecutionTrade => ({
   id: 'trade-1',
   accountId: 'account-1',
   securityId: 'security-1',

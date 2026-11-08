@@ -7,6 +7,34 @@ export class LedgerConflictError extends Error {
   }
 }
 
+/** Order summaries may describe the same executions. Without explicit linkage,
+ * neither different references nor different date conventions prove disjointness.
+ * This import guard is separate from replay so the engine can analyze mixed data.
+ */
+export function assertCompatibleTradeEvidence(
+  existing: readonly Trade[],
+  incoming: readonly Trade[],
+): void {
+  const precisionBySecurity = new Map<string, Set<Trade['status']>>();
+  for (const trade of existing) {
+    const key = JSON.stringify([trade.accountId, trade.securityId]);
+    const precisions = precisionBySecurity.get(key) ?? new Set<Trade['status']>();
+    precisions.add(trade.status);
+    precisionBySecurity.set(key, precisions);
+  }
+  for (const trade of incoming) {
+    const key = JSON.stringify([trade.accountId, trade.securityId]);
+    const precisions = precisionBySecurity.get(key) ?? new Set<Trade['status']>();
+    if ([...precisions].some((precision) => precision !== trade.status)) {
+      throw new LedgerConflictError(
+        'Execution fills and documentary orders for the same account/security require explicit linkage before import',
+      );
+    }
+    precisions.add(trade.status);
+    precisionBySecurity.set(key, precisions);
+  }
+}
+
 function identities(trade: TradeAlias): string[] {
   const keys = [
     JSON.stringify(['id', trade.id]),

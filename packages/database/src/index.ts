@@ -2,6 +2,8 @@ export { createDatabase } from './client.js';
 export {
   accounts,
   auditEvents,
+  documentOrders,
+  documentOrderSources,
   importBatches,
   schemaVersions,
   securities,

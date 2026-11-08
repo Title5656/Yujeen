@@ -11,6 +11,7 @@ const position: Position = {
   costBasis: '101',
   averageCost: '101',
   realizedPL: '5',
+  calculationStatus: 'AVAILABLE',
   lots: [],
   sales: [],
 };
@@ -23,7 +24,7 @@ const quote: PriceQuote = {
   quality: 'UNKNOWN',
   dataMode: 'MOCK',
 };
-const context = { valuedAt: '2026-01-06T15:01:00Z', maxAgeMs: 120_000 };
+const context = { valuedAt: '2026-01-06T15:01:00Z', quoteMaxAgeMs: 120_000, fxMaxAgeMs: 120_000 };
 const fx: ReferenceFx = {
   base: 'USD',
   quote: 'THB',
@@ -149,7 +150,65 @@ describe('valuation and historical FX policy', () => {
   });
 
   it('rejects invalid valuation clock/precision settings', () => {
-    expect(() => valuePosition(position, quote, { ...context, maxAgeMs: -1 })).toThrow();
+    expect(() => valuePosition(position, quote, { ...context, quoteMaxAgeMs: -1 })).toThrow();
+    expect(() => valuePosition(position, quote, { ...context, fxMaxAgeMs: -1 })).toThrow();
     expect(() => valuePosition(position, quote, { ...context, valuedAt: 'yesterday' })).toThrow();
   });
+
+  it('uses separate quote and FX age limits, rather than marking daily FX stale with quotes', () => {
+    const result = valuePosition(
+      position,
+      { ...quote, quality: 'REALTIME' },
+      {
+        ...context,
+        quoteMaxAgeMs: 30_000,
+        fxMaxAgeMs: 86_400_000,
+        fx,
+      },
+    );
+    expect(result).toMatchObject({ quoteStatus: 'STALE', referenceFxStatus: 'AVAILABLE' });
+  });
+
+  it('can expire FX while a quote still passes its independent limit', () => {
+    const result = valuePosition(
+      position,
+      { ...quote, quality: 'DELAYED' },
+      {
+        ...context,
+        quoteMaxAgeMs: 120_000,
+        fxMaxAgeMs: 30_000,
+        fx,
+      },
+    );
+    expect(result).toMatchObject({
+      quoteStatus: 'AVAILABLE',
+      quote: { quality: 'DELAYED', dataMode: 'MOCK' },
+      referenceFxStatus: 'STALE',
+      referenceTHB: { purpose: 'REFERENCE_ONLY', marketValue: '3905' },
+    });
+  });
+
+  it.each([0, 60_000])('accepts quote and FX at the exact age boundary %i', (age) => {
+    const asOf = new Date(Date.parse(context.valuedAt) - age).toISOString();
+    expect(
+      valuePosition(
+        position,
+        { ...quote, asOf, quality: 'REALTIME' },
+        {
+          ...context,
+          quoteMaxAgeMs: age,
+          fxMaxAgeMs: age,
+          fx: { ...fx, asOf },
+        },
+      ),
+    ).toMatchObject({ quoteStatus: 'AVAILABLE', referenceFxStatus: 'AVAILABLE' });
+  });
+
+  it.each([NaN, Infinity, 0.5, Number.MAX_SAFE_INTEGER + 1])(
+    'rejects invalid independent thresholds even when quote and FX are missing (%s)',
+    (age) => {
+      expect(() => valuePosition(position, null, { ...context, quoteMaxAgeMs: age })).toThrow();
+      expect(() => valuePosition(position, null, { ...context, fxMaxAgeMs: age })).toThrow();
+    },
+  );
 });

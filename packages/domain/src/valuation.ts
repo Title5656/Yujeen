@@ -22,21 +22,23 @@ export interface ReferenceFx {
 }
 export interface ValuationContext {
   readonly valuedAt: string;
-  readonly maxAgeMs: number;
+  readonly quoteMaxAgeMs: number;
+  readonly fxMaxAgeMs: number;
   readonly fx?: ReferenceFx | null;
 }
 export interface PositionValuation {
   readonly currency: 'USD';
   readonly marketValue: string | null;
   readonly unrealizedPL: string | null;
-  readonly realizedPL: string;
+  readonly realizedPL: string | null;
+  readonly calculationStatus: Position['calculationStatus'];
   readonly dailyPL: null;
   readonly quote: PriceQuote | null;
   readonly quoteStatus: 'MISSING' | 'STALE' | 'UNKNOWN' | 'AVAILABLE';
   readonly referenceFxStatus: 'MISSING' | 'STALE' | 'AVAILABLE';
   readonly referenceTHB: {
     readonly marketValue: string;
-    readonly unrealizedPL: string;
+    readonly unrealizedPL: string | null;
     readonly source: string;
     readonly asOf: string;
     readonly dataMode: DataMode;
@@ -64,14 +66,17 @@ export function valuePosition(
   quote: PriceQuote | null,
   context: ValuationContext,
 ): PositionValuation {
-  if (!Number.isSafeInteger(context.maxAgeMs) || context.maxAgeMs < 0)
-    throw new RangeError('Invalid quote age threshold');
+  for (const limit of [context.quoteMaxAgeMs, context.fxMaxAgeMs]) {
+    if (!Number.isSafeInteger(limit) || limit < 0)
+      throw new RangeError('Invalid quote/FX age threshold');
+  }
   const now = Date.parse(normalizeExecutedAt(context.valuedAt));
   const result: PositionValuation = {
     currency: 'USD',
     marketValue: null,
     unrealizedPL: null,
     realizedPL: position.realizedPL,
+    calculationStatus: position.calculationStatus,
     dailyPL: null,
     quote: null,
     quoteStatus: 'MISSING',
@@ -87,7 +92,7 @@ export function valuePosition(
       throw new RangeError('Expected USD/THB reference FX');
     parseAmount(fx.rate, 'FX rate', false);
     validateProvenance(fx.source, fx.dataMode);
-    fxStatus = ageStatus(fx.asOf, now, context.maxAgeMs);
+    fxStatus = ageStatus(fx.asOf, now, context.fxMaxAgeMs);
   }
   if (!quote) return { ...result, referenceFxStatus: fxStatus };
   if (
@@ -101,26 +106,35 @@ export function valuePosition(
   validateProvenance(quote.source, quote.dataMode);
   if (!['REALTIME', 'DELAYED', 'EOD', 'UNKNOWN'].includes(quote.quality))
     throw new RangeError('Invalid quote quality');
-  const freshness = ageStatus(quote.asOf, now, context.maxAgeMs);
+  const freshness = ageStatus(quote.asOf, now, context.quoteMaxAgeMs);
   // Position is engine output and can exceed per-trade input limits after aggregation.
   const quantity = new D(position.quantity);
-  const basis = new D(position.costBasis);
-  if (!quantity.isFinite() || quantity.isNegative() || !basis.isFinite() || basis.isNegative())
+  const basis = position.costBasis === null ? null : new D(position.costBasis);
+  if (!quantity.isFinite() || (basis !== null && (!basis.isFinite() || basis.isNegative())))
     throw new RangeError('Invalid position');
-  const marketValue = quantity.times(price);
-  const unrealized = marketValue.minus(basis);
-  return {
+  const observed: PositionValuation = {
     ...result,
-    marketValue: marketValue.toFixed(),
-    unrealizedPL: unrealized.toFixed(),
     quote: { ...quote, asOf: normalizeExecutedAt(quote.asOf) },
     quoteStatus:
       freshness === 'STALE' ? 'STALE' : quote.quality === 'UNKNOWN' ? 'UNKNOWN' : 'AVAILABLE',
     referenceFxStatus: fxStatus,
+  };
+  if (quantity.isNegative()) {
+    if (position.calculationStatus === 'AVAILABLE' || basis !== null)
+      throw new RangeError('Invalid position');
+    // A signed balance diagnoses missing history; it is not evidence of a short holding.
+    return observed;
+  }
+  const marketValue = quantity.times(price);
+  const unrealized = basis === null ? null : marketValue.minus(basis);
+  return {
+    ...observed,
+    marketValue: marketValue.toFixed(),
+    unrealizedPL: unrealized?.toFixed() ?? null,
     referenceTHB: fx
       ? {
           marketValue: marketValue.times(fx.rate).toFixed(),
-          unrealizedPL: unrealized.times(fx.rate).toFixed(),
+          unrealizedPL: unrealized?.times(fx.rate).toFixed() ?? null,
           source: fx.source,
           asOf: normalizeExecutedAt(fx.asOf),
           dataMode: fx.dataMode,

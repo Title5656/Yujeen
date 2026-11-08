@@ -20,7 +20,8 @@
     "dev": "pnpm build && concurrently --kill-others --names web,api \"pnpm --filter @portfolio/web dev\" \"pnpm --filter @portfolio/api dev\"",
     "preview": "pnpm build && pnpm --filter @portfolio/api preview",
     "db:migrate:local": "pnpm --filter @portfolio/api db:migrate:local",
-    "test:smoke": "playwright test"
+    "test:smoke": "playwright test",
+    "benchmark:import": "pnpm build:packages && node scripts/benchmark-import.ts && node scripts/benchmark-document-orders.ts"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

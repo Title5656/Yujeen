@@ -52,7 +52,7 @@ const OffsetInstantSchema = z
   .refine(isRealOffsetInstant, 'A real ISO calendar instant with an offset is required')
   .transform((value) => new Date(value).toISOString());
 
-export const TradeSchema = z
+export const ExecutionTradeSchema = z
   .strictObject({
     id: IdentifierSchema,
     accountId: IdentifierSchema,
@@ -85,6 +85,73 @@ export const TradeSchema = z
     }
   });
 
+function documentaryDay(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year = 0, month = 0, day = 0] = value.split('-').map(Number);
+  const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const maximum = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
+  return year >= 1 && maximum !== undefined && day >= 1 && day <= maximum;
+}
+
+// Inputs have at most twelve fractional digits. A common integer scale makes the
+// reported cash equation exact without floating point or another dependency.
+function scaledAmount(value: string): bigint {
+  const [integer = '0', fraction = ''] = value.split('.');
+  return BigInt(integer) * 1_000_000_000_000n + BigInt(fraction.padEnd(12, '0'));
+}
+
+export const DocumentOrderTradeSchema = z
+  .strictObject({
+    id: IdentifierSchema,
+    accountId: IdentifierSchema,
+    securityId: IdentifierSchema,
+    broker: z.literal('DIME'),
+    market: z.literal('US'),
+    currency: z.literal('USD'),
+    precision: z.literal('DOCUMENT_DATE'),
+    status: z.literal('CONFIRMED'),
+    side: z.enum(['BUY', 'SELL']),
+    executedAt: z.null(),
+    sequence: z.null(),
+    executionPrice: z.null(),
+    tradeDate: z.string().refine(documentaryDay, 'A real documentary calendar day is required'),
+    quantity: PositiveDecimalStringSchema.transform(normalizedDecimal),
+    unitPrice: PositiveDecimalStringSchema.transform(normalizedDecimal),
+    grossAmount: PositiveDecimalStringSchema.transform(normalizedDecimal),
+    netAmount: DecimalStringSchema.transform(normalizedDecimal),
+    fee: DecimalStringSchema.transform(normalizedDecimal),
+    tax: DecimalStringSchema.transform(normalizedDecimal),
+    feeCurrency: z.literal('USD'),
+    externalRef: IdentifierSchema,
+    importBatchId: IdentifierSchema,
+    sourceRow: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
+  })
+  .superRefine((trade, context) => {
+    // Regex failures are continuable Zod issues. Never feed malformed strings into BigInt.
+    if (
+      [trade.grossAmount, trade.netAmount, trade.fee, trade.tax].some(
+        (amount) => !DecimalStringSchema.safeParse(amount).success,
+      )
+    )
+      return;
+    const gross = scaledAmount(trade.grossAmount);
+    const charges = scaledAmount(trade.fee) + scaledAmount(trade.tax);
+    if (
+      scaledAmount(trade.netAmount) !== (trade.side === 'BUY' ? gross + charges : gross - charges)
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['netAmount'],
+        message: 'Reported net amount must equal gross plus buy charges or minus sell charges',
+      });
+    }
+  });
+
+export const TradeSchema = z.discriminatedUnion('status', [
+  ExecutionTradeSchema,
+  DocumentOrderTradeSchema,
+]);
+
 export const ImportBatchSchema = z.strictObject({
   id: IdentifierSchema,
   accountId: IdentifierSchema,
@@ -108,5 +175,7 @@ export const ConfirmedTradeBatchSchema = z
   });
 
 export type Trade = z.infer<typeof TradeSchema>;
+export type ExecutionTrade = z.infer<typeof ExecutionTradeSchema>;
+export type DocumentOrderTrade = z.infer<typeof DocumentOrderTradeSchema>;
 export type ImportBatch = z.infer<typeof ImportBatchSchema>;
 export type ConfirmedTradeBatch = z.infer<typeof ConfirmedTradeBatchSchema>;
