@@ -9,5 +9,10 @@
       "database_name": "portfolio-m0-test",
       "database_id": "00000000-0000-0000-0000-000000000000",
     },
+    {
+      "binding": "OTHER_DB",
+      "database_name": "portfolio-m3-other-test",
+      "database_id": "00000000-0000-0000-0000-000000000001",
+    },
   ],
 }

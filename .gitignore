@@ -12,9 +12,29 @@ playwright-report/
 .env.*
 !.env.example
 .dev.vars*
+wrangler.self-host.local.jsonc
+*.pem
+*.key
+*.p12
 *.log
 *.pdf
 *.zip
 private-documents/
 .DS_Store
 Thumbs.db
+
+# Internal project notes stay on the maintainer's machine.
+/AGENTS.md
+/CODEX_START.md
+/PROJECT_SPEC.md
+/docs/
+/.hallmark/
+
+# Local database copies and backups must never be published.
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+/backups/

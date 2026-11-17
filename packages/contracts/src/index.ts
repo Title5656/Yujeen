@@ -3,6 +3,7 @@ export type { HealthResponse, ApiError } from './health.js';
 export { DecimalStringSchema, PositiveDecimalStringSchema } from './decimal.js';
 export { MarketQuoteSchema } from './market-quote.js';
 export type { MarketQuote } from './market-quote.js';
+export * from './integrations.js';
 export { MockImportDocumentSchema } from './mock-import.js';
 export type { MockImportDocument } from './mock-import.js';
 export { TradeSchema, ImportBatchSchema, ConfirmedTradeBatchSchema } from './trade.js';

@@ -47,12 +47,18 @@ importers:
       '@portfolio/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@portfolio/database':
+        specifier: workspace:*
+        version: link:../../packages/database
       '@portfolio/domain':
         specifier: workspace:*
         version: link:../../packages/domain
       '@portfolio/importers':
         specifier: workspace:*
         version: link:../../packages/importers
+      '@portfolio/market-data':
+        specifier: workspace:*
+        version: link:../../packages/market-data
       hono:
         specifier: 4.13.17
         version: 4.13.17
@@ -63,9 +69,6 @@ importers:
       '@cloudflare/workers-types':
         specifier: 5.20261107.1
         version: 5.20261107.1
-      '@portfolio/database':
-        specifier: workspace:*
-        version: link:../../packages/database
       vitest:
         specifier: 5.1.0
         version: 5.1.0(@types/node@24.19.2)(vite@8.3.6(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))

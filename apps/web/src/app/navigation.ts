@@ -39,8 +39,7 @@ export const pages = [
     path: '/settings',
     title: 'Settings',
     label: 'ตั้งค่าการเชื่อมต่อ',
-    description:
-      'การเลือกผู้ให้บริการและบันทึก API Key ยังไม่เปิดใช้งาน ขณะนี้ใช้ข้อมูลจำลองเท่านั้น',
+    description: 'จัดการ API Key สำหรับข้อมูลหุ้นสหรัฐฯ และตรวจอัตราอ้างอิง USD/THB',
     icon: '⚙',
   },
 ] as const;

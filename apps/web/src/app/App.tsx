@@ -1,6 +1,7 @@
 import { ApiHealth } from '../components/ApiHealth.js';
 import { pages } from './navigation.js';
 import { ImportPage } from '../features/imports/ImportPage.js';
+import { SettingsPage } from '../features/settings/SettingsPage.js';
 
 export function App() {
   const page = pages.find((item) => item.path === window.location.pathname);
@@ -12,13 +13,7 @@ export function App() {
       </a>
       <aside className="sidebar">
         <a href="/" className="brand" aria-label="Yujeen หน้าหลัก">
-          <img
-            className="brand-logo"
-            src="/yujeen-logo.png"
-            alt="Yujeen"
-            width="1536"
-            height="1024"
-          />
+          <strong className="brand-wordmark">Yujeen</strong>
           <span className="brand-caption">พื้นที่การลงทุนส่วนตัว</span>
         </a>
         <p className="nav-caption">WORKSPACE</p>
@@ -53,7 +48,11 @@ export function App() {
             พอร์ตส่วนตัว <span className="breadcrumb">/ {page?.title ?? 'ไม่พบหน้า'}</span>
           </span>
           <span className="mock-badge">
-            {page?.path === '/import' ? 'LOCAL · ตรวจเอกสารในเครื่อง' : 'MOCK · ข้อมูลจำลอง'}
+            {page?.path === '/import'
+              ? 'LOCAL · ตรวจเอกสารในเครื่อง'
+              : page?.path === '/settings'
+                ? 'Integrations'
+                : 'MOCK · ข้อมูลจำลอง'}
           </span>
         </header>
         <main id="main" tabIndex={-1}>
@@ -64,12 +63,18 @@ export function App() {
               <p className="subtitle">{page?.label ?? 'กลับไปหน้าหลักเพื่อเริ่มต้น'}</p>
             </div>
             <span className="stage-tag">
-              {page?.path === '/import' ? 'M2 · Document Import' : 'Project Foundation'}
+              {page?.path === '/import'
+                ? 'M2 · Document Import'
+                : page?.path === '/settings'
+                  ? 'Market Data'
+                  : 'Project Foundation'}
             </span>
           </div>
 
           {page?.path === '/import' ? (
             <ImportPage />
+          ) : page?.path === '/settings' ? (
+            <SettingsPage />
           ) : (
             <>
               <section className="intro-panel" aria-labelledby="intro-title">

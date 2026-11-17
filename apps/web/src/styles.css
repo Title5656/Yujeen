@@ -45,14 +45,6 @@ button {
   align-items: center;
   gap: 4px;
 }
-.brand-logo {
-  display: block;
-  width: 200px;
-  max-width: 100%;
-  height: auto;
-  aspect-ratio: 2 / 1;
-  object-fit: cover;
-}
 .brand-caption {
   display: block;
   font-size: 11px;
@@ -60,6 +52,11 @@ button {
   letter-spacing: 0.1px;
   color: #65766d;
   margin-top: 2px;
+}
+.brand-wordmark {
+  font-size: clamp(1.4rem, 5vw, 2.4rem);
+  font-weight: 750;
+  letter-spacing: -0.05em;
 }
 .nav-caption {
   margin: 52px 14px 14px;
@@ -413,9 +410,6 @@ footer {
     border-right: 0;
     border-bottom: 1px solid #e2e7df;
   }
-  .brand-logo {
-    width: 180px;
-  }
   .nav-caption,
   .sidebar-note {
     display: none;
@@ -480,4 +474,30 @@ footer {
     gap: 8px;
     margin-top: 26px;
   }
+}
+.settings-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.settings-grid form {
+  display: grid;
+  gap: 0.6rem;
+  max-width: 24rem;
+  margin-block: 1rem;
+}
+
+.settings-grid input,
+.settings-grid button {
+  padding: 0.65rem;
+  border: 1px solid currentColor;
+  border-radius: 0.5rem;
+}
+
+.settings-actions {
+  margin-block: 1rem;
+}
+
+.settings-actions button {
+  margin: 0.2rem;
 }

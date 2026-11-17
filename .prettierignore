@@ -11,3 +11,6 @@ playwright-report
 PROJECT_SPEC.md
 AGENTS.md
 CODEX_START.md
+docs/
+.hallmark/
+LICENSE

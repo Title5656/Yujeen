@@ -1,0 +1,1 @@
+ALTER TABLE `market_budget` ADD `status_version` text;

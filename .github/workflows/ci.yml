@@ -1,4 +1,4 @@
-name: M0 quality
+name: Quality checks
 
 on:
   push:
@@ -16,6 +16,8 @@ jobs:
       CI: 'true'
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@v4
         with:
           version: 11.25.0

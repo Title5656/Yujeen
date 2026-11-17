@@ -15,6 +15,50 @@ export const schemaVersions = sqliteTable('schema_versions', {
   label: text('label').notNull(),
 });
 
+export const marketCredentials = sqliteTable(
+  'market_credentials',
+  {
+    slot: text('slot').primaryKey().notNull(),
+    version: text('version').notNull().unique(),
+    keyVersion: integer('key_version').notNull(),
+    nonce: text('nonce').notNull(),
+    ciphertext: text('ciphertext').notNull(),
+    testedAt: text('tested_at'),
+  },
+  (table) => [
+    check('market_credential_slot', sql`${table.slot} IN ('candidate', 'active')`),
+    check('market_credential_key_version', sql`${table.keyVersion} = 1`),
+  ],
+);
+
+export const marketCache = sqliteTable(
+  'market_cache',
+  {
+    namespace: text('namespace').notNull(),
+    symbol: text('symbol').notNull(),
+    payload: text('payload').notNull(),
+    fetchedAt: integer('fetched_at').notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.namespace, table.symbol] }),
+    index('market_cache_fetched_at').on(table.fetchedAt),
+  ],
+);
+
+export const marketBudget = sqliteTable('market_budget', {
+  provider: text('provider').primaryKey().notNull(),
+  day: text('day').notNull(),
+  dayCount: integer('day_count').notNull(),
+  month: text('month').notNull(),
+  monthCount: integer('month_count').notNull(),
+  nextAt: integer('next_at').notNull(),
+  refreshAt: integer('refresh_at').notNull(),
+  lease: text('lease').notNull(),
+  leaseUntil: integer('lease_until').notNull(),
+  status: text('status').notNull(),
+  statusVersion: text('status_version'),
+});
+
 export const accounts = sqliteTable(
   'accounts',
   {

@@ -1,7 +1,7 @@
-import type { Hono } from 'hono';
+import type { Env, Hono } from 'hono';
 import { ApiErrorSchema } from '@portfolio/contracts';
 
-export function installErrorHandlers(app: Hono): void {
+export function installErrorHandlers<E extends Env>(app: Hono<E>): void {
   app.notFound((context) =>
     context.json(
       ApiErrorSchema.parse({

@@ -1,0 +1,29 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "yujeen-example",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-07",
+  "send_metrics": false,
+  "workers_dev": false,
+  "preview_urls": false,
+  "assets": {
+    "directory": "../web/dist",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api", "/api/*"],
+  },
+  "vars": {
+    "APP_ORIGIN": "https://yujeen-example.example.workers.dev",
+    "ACCESS_ISSUER": "https://example.cloudflareaccess.com",
+    "ACCESS_AUDIENCE": "REPLACE_WITH_ACCESS_APPLICATION_AUD",
+    "ENABLE_ALPACA": "false",
+    "ENABLE_FRANKFURTER": "false",
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "yujeen-example",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "../../packages/database/migrations",
+    },
+  ],
+}

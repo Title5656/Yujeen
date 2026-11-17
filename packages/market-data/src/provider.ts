@@ -5,7 +5,7 @@ export type QuoteRequest = SecurityIdentity;
 
 export interface ConnectionHealth {
   readonly status: 'ok' | 'unavailable';
-  readonly dataMode: 'MOCK';
+  readonly dataMode: 'MOCK' | 'LIVE';
 }
 
 export interface MarketDataProvider {
@@ -22,6 +22,7 @@ export class MarketDataError extends Error {
   constructor(
     readonly code: MarketDataErrorCode,
     message: string,
+    readonly retryAt?: number,
   ) {
     super(message);
     this.name = 'MarketDataError';
