@@ -39,6 +39,11 @@ export default tseslint.config(
             {
               group: [
                 '@portfolio/*',
+                '**/apps/**',
+                '**/contracts/**',
+                '**/database/**',
+                '**/importers/**',
+                '**/market-data/**',
                 'react',
                 'react/*',
                 'hono',
@@ -63,9 +68,85 @@ export default tseslint.config(
       'no-restricted-imports': [
         'error',
         {
-          patterns: ['@portfolio/domain', '@portfolio/database', '@portfolio/market-data'],
+          patterns: [
+            '@portfolio/domain',
+            '@portfolio/domain/*',
+            '@portfolio/database',
+            '@portfolio/database/*',
+            '@portfolio/market-data',
+            '@portfolio/market-data/*',
+            '**/domain/**',
+            '**/database/**',
+            '**/market-data/**',
+            '**/api/**',
+          ],
         },
       ],
     },
   },
+  ...[
+    {
+      layer: 'contracts',
+      forbidden: [
+        '@portfolio/*',
+        '**/apps/**',
+        '**/domain/**',
+        '**/database/**',
+        '**/importers/**',
+        '**/market-data/**',
+      ],
+    },
+    {
+      layer: 'importers',
+      forbidden: [
+        '@portfolio/database',
+        '@portfolio/database/*',
+        '@portfolio/market-data',
+        '@portfolio/market-data/*',
+        '**/apps/**',
+        '**/database/**',
+        '**/market-data/**',
+      ],
+    },
+    {
+      layer: 'market-data',
+      forbidden: [
+        '@portfolio/database',
+        '@portfolio/database/*',
+        '@portfolio/importers',
+        '@portfolio/importers/*',
+        '**/apps/**',
+        '**/database/**',
+        '**/importers/**',
+      ],
+    },
+    {
+      layer: 'database',
+      forbidden: [
+        '@portfolio/importers',
+        '@portfolio/importers/*',
+        '@portfolio/market-data',
+        '@portfolio/market-data/*',
+        '**/apps/**',
+        '**/importers/**',
+        '**/market-data/**',
+      ],
+    },
+  ].map(({ layer, forbidden }) => ({
+    files: [`packages/${layer}/src/**/*.ts`],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [...forbidden, 'react', 'react/*', 'hono', 'hono/*'],
+              message:
+                'Keep package dependencies directed toward contracts/domain; compose adapters in the API.',
+            },
+          ],
+        },
+      ],
+    },
+  })),
 );

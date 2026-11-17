@@ -1,13 +1,14 @@
 import { FxRateSchema, MarketQuoteSchema } from '@portfolio/contracts';
 import type { AlpacaCredentials, MarketData, MarketStatus } from '@portfolio/contracts';
-import { createMarketRepository } from '@portfolio/database';
+import type { MarketRepository } from '@portfolio/database';
 import {
   AlpacaProvider,
   fetchReferenceFx,
   MarketDataError,
   quoteRequest,
 } from '@portfolio/market-data';
-import type { FetchUpstream, Installation } from '../../middleware/owner.js';
+import type { Installation } from '../../config/installation.js';
+import type { FetchUpstream } from '../../lib/transport.js';
 import { sealCredentials, unsealCredentials } from './secrets.js';
 
 const quoteInterval = 15 * 60_000;
@@ -37,11 +38,11 @@ type QuoteAttempt = {
 };
 
 export function marketService(
-  config: Installation,
+  config: Pick<Installation, 'masterKey' | 'alpaca' | 'fx'>,
+  repo: MarketRepository,
   fetchUpstream: FetchUpstream,
   now: () => number,
 ) {
-  const repo = createMarketRepository(config.db);
   const quoteStatus = (active: { version: string } | null): Promise<MarketStatus> =>
     config.alpaca && active
       ? repo.status('alpaca', active.version)

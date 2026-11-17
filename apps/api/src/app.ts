@@ -3,7 +3,7 @@ import { installErrorHandlers } from './middleware/errors.js';
 import { healthRoutes } from './modules/health/routes.js';
 import { marketRoutes } from './modules/market-data/routes.js';
 import type { MarketDependencies } from './modules/market-data/routes.js';
-import type { InstallBindings } from './middleware/owner.js';
+import type { InstallBindings } from './config/installation.js';
 
 export function createApp(deps: MarketDependencies = {}) {
   const app = new Hono<{ Bindings: InstallBindings }>();

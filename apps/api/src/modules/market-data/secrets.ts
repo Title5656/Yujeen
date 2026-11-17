@@ -1,7 +1,7 @@
 import { AlpacaCredentialsSchema } from '@portfolio/contracts';
 import type { AlpacaCredentials } from '@portfolio/contracts';
 import type { SealedCredential } from '@portfolio/database';
-import { decodeBase64 } from '../../middleware/owner.js';
+import { decodeBase64 } from '../../lib/base64.js';
 
 const encode = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes));
 const encoder = new TextEncoder();

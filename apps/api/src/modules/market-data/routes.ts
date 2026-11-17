@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
+import { createMarketRepository } from '@portfolio/database';
 import {
   AlpacaCredentialsSchema,
   IntegrationsSchema,
@@ -7,8 +8,10 @@ import {
   SymbolsInputSchema,
   VersionInputSchema,
 } from '@portfolio/contracts';
-import { installation, ownerVerifier } from '../../middleware/owner.js';
-import type { FetchUpstream, InstallBindings } from '../../middleware/owner.js';
+import { requireOwner } from '../../middleware/require-owner.js';
+import type { OwnerEnv } from '../../middleware/require-owner.js';
+import { failure } from '../../middleware/api-failure.js';
+import type { FetchUpstream } from '../../lib/transport.js';
 import { marketService } from './service.js';
 
 export interface MarketDependencies {
@@ -16,49 +19,22 @@ export interface MarketDependencies {
   now?: () => number;
 }
 type PrivateEnv = {
-  Bindings: InstallBindings;
-  Variables: {
+  Bindings: OwnerEnv['Bindings'];
+  Variables: OwnerEnv['Variables'] & {
     market: ReturnType<typeof marketService>;
     alpacaEnabled: boolean;
   };
 };
 
-const messages = {
-  INVALID_INPUT: 'ข้อมูลที่ส่งมาไม่ถูกต้อง',
-  UNAUTHENTICATED: 'กรุณาเข้าสู่ระบบผ่าน Cloudflare Access',
-  FORBIDDEN: 'ไม่อนุญาตให้เข้าถึงจากบัญชีหรือเว็บไซต์นี้',
-  NOT_CONFIGURED: 'ยังไม่ได้ตั้งค่าชุดติดตั้งหรือยังไม่เปิดบริการนี้',
-  CONFLICT: 'การตั้งค่าเปลี่ยนไปหรือยังไม่ได้ผ่านการทดสอบ',
-  RATE_LIMITED: 'ครบโควตาหรือกำลังรอรอบถัดไป',
-  AUTH_FAILED: 'ผู้ให้บริการปฏิเสธ API Key หรือสิทธิ์เข้าถึง feed',
-  UNAVAILABLE: 'ยังเชื่อมต่อผู้ให้บริการไม่ได้',
-} as const;
-const failure = (code: keyof typeof messages) => ({ error: { code, message: messages[code] } });
-
 export function marketRoutes(deps: MarketDependencies) {
   const app = new Hono<PrivateEnv>();
   const now = deps.now ?? Date.now;
   const fetchUpstream: FetchUpstream = deps.fetch ?? ((url, init) => fetch(url, init));
-  const verify = ownerVerifier(fetchUpstream);
 
+  app.use('*', requireOwner(fetchUpstream, now));
   app.use('*', async (c, next) => {
-    c.header('Cache-Control', 'private, no-store');
-    const config = installation(c.env);
-    if (!config) return c.json(failure('NOT_CONFIGURED'), 503);
-    if (new URL(c.req.url).origin !== config.origin) return c.json(failure('FORBIDDEN'), 403);
-    if (
-      c.req.method !== 'GET' &&
-      c.req.method !== 'HEAD' &&
-      c.req.header('Origin') !== config.origin
-    )
-      return c.json(failure('FORBIDDEN'), 403);
-    const status = await verify(c.req.header('Cf-Access-Jwt-Assertion'), config, now());
-    if (status !== 200)
-      return c.json(
-        failure(status === 401 ? 'UNAUTHENTICATED' : status === 403 ? 'FORBIDDEN' : 'UNAVAILABLE'),
-        status,
-      );
-    c.set('market', marketService(config, fetchUpstream, now));
+    const config = c.var.installation;
+    c.set('market', marketService(config, createMarketRepository(config.db), fetchUpstream, now));
     c.set('alpacaEnabled', config.alpaca);
     await next();
   });

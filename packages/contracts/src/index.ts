@@ -1,5 +1,7 @@
-export { HealthResponseSchema, ApiErrorSchema } from './health.js';
-export type { HealthResponse, ApiError } from './health.js';
+export { HealthResponseSchema } from './health.js';
+export type { HealthResponse } from './health.js';
+export { ApiErrorSchema } from './api-error.js';
+export type { ApiError } from './api-error.js';
 export { DecimalStringSchema, PositiveDecimalStringSchema } from './decimal.js';
 export { MarketQuoteSchema } from './market-quote.js';
 export type { MarketQuote } from './market-quote.js';
