@@ -54,6 +54,7 @@ test('lets the owner save, test and activate a candidate without retaining its s
   await page.route('**/api/market-data/refresh', (route) => {
     const { symbols } = route.request().postDataJSON() as { symbols: string[] };
     const symbol = symbols[0];
+    if (typeof symbol !== 'string') throw new Error('Expected a ticker in the quote request');
     requested.push(symbol);
     const now = Date.now();
     const wait = (reason: 'COOLDOWN' | 'DAILY_QUOTA') => ({
